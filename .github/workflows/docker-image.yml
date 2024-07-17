@@ -33,6 +33,7 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+       
         - name: SSH into EC2 instance
         uses: appleboy/ssh-action@master
         with:
@@ -43,7 +44,6 @@ jobs:
         run: |
             sudo apt update
             sudo apt install docker.io -y
-            sudo gpasswd -a ${{ secrets.DOCKER_USERNAME }} docker
             sudo apt install awscli -y
             sudo $(aws ecr get-login --no-include-email --region ap-south-1);
             sudo docker stop myappcontainer || true
