@@ -39,7 +39,7 @@ jobs:
           docker push $REGISTRY/$REPOSITORY
       - name: Login to AWS ECR
         run: |
-          aws ecr get-login-password --region ap-south-1 | docker login ${{ secrets.DOCKERHUB_USERNAME }} AWS --password-stdin 654654264414.dkr.ecr.ap-south-1.amazonaws.com
+         aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 654654264414.dkr.ecr.ap-south-1.amazonaws.com
       - name: Stop and remove existing container
         run: |
          sudo docker stop ecr-web-image || true
