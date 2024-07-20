@@ -32,19 +32,19 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ecr-web-image
           IMAGE_TAG: ${{ github.sha }}
-          AWS_DEFAULT_REGION: ap-south-1
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.SERVER_PUBLIC_IP }}
-          username: ubuntu
-          key: ${{ env.PEM_SSH_KEY }}
-          envs: PRIVATE_SSH_KEY,PUBLIC_SSH_KEY,REGISTRY,REPOSITORY,IMAGE_TAG,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_DEFAULT_REGION,AWS_REGION
-          script: |-
-            sudo apt update
-            sudo apt install docker.io -y
-            sudo apt install awscli -y
-            sudo $(aws ecr get-login --no-include-email --region ap-south-1);
-            sudo docker stop myappcontainer || true
-            sudo docker rm myappcontainer || true
-            sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
-            sudo docker run -d --name myappcontainer -p 80:80 $REGISTRY/$REPOSITORY:$IMAGE_TAG
+        run: |-
+          docker buildx build --platform linux/amd64 -t $REGISTRY/$REPOSITORY .
+          docker push $REGISTRY/$REPOSITORY
+      - name: Login to AWS ECR
+        run: |
+          aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 654654264414.dkr.ecr.ap-south-1.amazonaws.com
+      - name: Stop and remove existing container
+        run: |
+         sudo docker stop ecr-web-image || true
+          sudo docker rm ecr-web-image || true
+      - name: Pull latest Docker image
+        run: |
+          docker pull 654654264414.dkr.ecr.ap-south-1.amazonaws.com/ecr-web-image
+      - name: Run Docker container
+        run: |
+         sudo docker run --rm -d --name ecr-web-image -p 80:80 654654264414.dkr.ecr.ap-south-1.amazonaws.com/ecr-web-image
