@@ -1,52 +1,24 @@
-name: Deploy to AWS
+name: CI Pipeline
+
 on:
   push:
-    branches:
-      - "main"
-env:
-  AWS_REGION: ap-south-1
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  PRIVATE_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
-  SERVER_PUBLIC_IP: ${{ secrets.AWS_PUBLIC_KEY }}
-  PUBLIC_SSH_KEY: ${{ secrets.PUBLIC_SSH_KEY }}
-  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    branches: [ "main" ]
+
 jobs:
-  deploy:
+
+  build:
+
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to AWS ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      - name: Build, push docker image
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: ecr-web-image
-          IMAGE_TAG: ${{ github.sha }}
-        run: |-
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
-          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
-      - name: Deploy docker image to EC2
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: ecr-web-image
-          IMAGE_TAG: ${{ github.sha }}
-        run: |-
-          docker buildx build --platform linux/amd64 -t $REGISTRY/$REPOSITORY .
-          docker push $REGISTRY/$REPOSITORY
-      - name: Login to AWS ECR
-        run: |
-         aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 654654264414.dkr.ecr.ap-south-1.amazonaws.com
-      - name: Stop and remove existing container
-        run: |
-         sudo docker stop ecr-web-image || true
-          sudo docker rm ecr-web-image || true
-      - name: Pull latest Docker image
-        run: |
-          docker pull 654654264414.dkr.ecr.ap-south-1.amazonaws.com/ecr-web-image
-      - name: Run Docker container
-        run: |
-         sudo docker run --rm -d --name ecr-web-image -p 80:80 654654264414.dkr.ecr.ap-south-1.amazonaws.com/ecr-web-image
+    - uses: actions/checkout@v3
+    - name: Login Dockerhub
+      env:
+        DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+        DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+      run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      
+    - name: Build the Docker image
+      run: docker build -t newdocker233/ecr-web-image .
+    - name: Push to Dockerhub
+      run: docker push newdocker233/ecr-web-image
