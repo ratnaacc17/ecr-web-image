@@ -19,4 +19,4 @@ jobs:
         run: sudo docker rm -f ecr-web-image-container || true
 
       - name: Run Container
-        run: sudo docker run -d -p 8080:8080 --name ecr-web-image-container $DOCKER_USERNAME"/newdocker233/ecr-web-image"
+        run: sudo docker run -d -p 8080:8080 --name ecr-web-image-container $DOCKER_USERNAME/newdocker233/ecr-web-image:latest
